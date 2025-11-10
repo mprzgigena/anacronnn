@@ -1,0 +1,112 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Medical theme custom styles */
+:root {
+  --medical-primary: #0066cc;
+  --medical-secondary: #4a90e2;
+  --medical-accent: #00a65a;
+  --medical-warning: #f39c12;
+  --medical-danger: #e74c3c;
+  --medical-light: #ecf0f1;
+  --medical-dark: #2c3e50;
+}
+
+/* Global styles */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--medical-dark);
+  line-height: 1.6;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Smooth transitions */
+* {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Focus states */
+.focus-visible {
+  outline: 2px solid var(--medical-primary);
+  outline-offset: 2px;
+}
+
+/* Medical status colors */
+.status-pendiente {
+  color: var(--medical-warning);
+}
+
+.status-confirmado {
+  color: var(--medical-accent);
+}
+
+.status-completado {
+  color: var(--medical-primary);
+}
+
+.status-cancelado {
+  color: var(--medical-danger);
+}
+
+.status-no-asistio {
+  color: #6b7280;
+}
+
+/* Shadow styles for medical theme */
+.shadow-medical {
+  box-shadow: 0 4px 6px -1px rgba(0, 102, 204, 0.1), 0 2px 4px -1px rgba(0, 102, 204, 0.06);
+}
+
+.shadow-card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Animation for loading states */
+@keyframes pulse-medical {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse-medical {
+  animation: pulse-medical 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Print styles for medical documents */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    color: black;
+    background: white;
+  }
+  
+  .shadow-card,
+  .shadow-medical {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+  }
+}

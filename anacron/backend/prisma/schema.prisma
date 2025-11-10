@@ -1,0 +1,383 @@
+// ==================================================================================
+// ANACRON - ESQUEMA DE BASE DE DATOS PARA SISTEMA DE GESTIÓN MÉDICA
+// ==================================================================================
+//
+// 📋 DESCRIPCIÓN GENERAL:
+// Sistema simplificado de gestión médica desarrollado como proyecto escolar.
+// Permite gestionar turnos médicos, pacientes, profesionales y establecimientos.
+//
+// 🏗️ TECNOLOGÍAS:
+// - ORM: Prisma v6.19.0
+// - Base de Datos: MySQL 
+// - Framework: NestJS + TypeScript
+// - Conexión: DATABASE_URL="mysql://root:@localhost:3306/anacron"
+//
+// 📊 ESTRUCTURA DE DATOS:
+// - 9 Tablas principales
+// - 2 Tablas intermedias (Many-to-Many)
+// - 2 Enums para validación
+// - Relaciones con integridad referencial
+//
+// ==================================================================================
+// 📁 TABLAS PRINCIPALES (7 entidades de negocio):
+// ==================================================================================
+//
+// 1. 👤 PACIENTES (pacientes)
+//    - Información personal de pacientes
+//    - Conexión: obra social (opcional)
+//    - Campos únicos: dni, email
+//    - Índices: dni, email, obra_social_id
+//
+// 2. 🏥 ESTABLECIMIENTOS (establecimientos) 
+//    - Clínicas, hospitales, centros médicos
+//    - Horarios de atención (VARCHAR para compatibilidad)
+//    - Tipos: CLINICA, HOSPITAL, LABORATORIO, etc.
+//    - Conexión: profesionales, obras sociales
+//
+// 3. 👨‍⚕️ PROFESIONALES (profesionales)
+//    - Médicos y especialistas
+//    - Matrícula profesional única
+//    - Conexión obligatoria: establecimiento
+//    - Relación M:N con especialidades
+//
+// 4. 🩺 ESPECIALIDADES (especialidades)
+//    - Cardiología, Traumatología, etc.
+//    - Duración estimada en minutos
+//    - Relación M:N con profesionales
+//
+// 5. 📅 TURNOS (turnos) ⭐ NÚCLEO DEL SISTEMA
+//    - Sistema principal de citas médicas
+//    - Campos obligatorios: paciente, profesional, especialidad, establecimiento
+//    - Número de referencia único autogenerado
+//    - Estados: PENDIENTE, CONFIRMADO, COMPLETADO, CANCELADO, NO_ASISTIO
+//    - Formato de hora: VARCHAR(10) ("HH:MM")
+//
+// 6. 🛡️ OBRAS SOCIALES (obras_sociales)
+//    - Seguros médicos y cobertura
+//    - Tipo de cobertura configurable
+//    - Relación M:N con establecimientos
+//
+// 7. 📋 HISTORIAL CONSULTAS (historial_consultas)
+//    - Registro de consultas médicas completadas
+//    - Diagnósticos, tratamientos, observaciones
+//    - Puede crearse desde turno o manualmente
+//    - Conexión opcional: turno origen
+//
+// ==================================================================================
+// 📊 TABLAS INTERMEDIAS (Many-to-Many):
+// ==================================================================================
+//
+// 8. 👨‍⚕️↔️🩺 PROFESIONAL_ESPECIALIDAD (profesional_especialidad)
+//    - Un profesional puede tener múltiples especialidades
+//    - Una especialidad puede ser ejercida por múltiples profesionales
+//    - Constraint único: profesionalId + especialidadId
+//
+// 9. 🏥↔️🛡️ ESTABLECIMIENTO_OBRA_SOCIAL (establecimiento_obra_social) 
+//    - Un establecimiento acepta múltiples obras sociales
+//    - Una obra social es aceptada en múltiples establecimientos
+//    - Constraint único: establecimientoId + obraSocialId
+//
+// ==================================================================================
+// 🔗 RELACIONES PRINCIPALES:
+// ==================================================================================
+//
+// PACIENTE:
+//   ├── obraSocial (Many-to-One) - Seguro médico
+//   ├── turnos (One-to-Many) - Citas programadas
+//   └── historialConsultas (One-to-Many) - Consultas realizadas
+//
+// ESTABLECIMIENTO:
+//   ├── profesionales (One-to-Many) - Staff médico
+//   ├── turnos (One-to-Many) - Citas en el establecimiento
+//   ├── historialConsultas (One-to-Many) - Consultas realizadas
+//   └── obrasSociales (Many-to-Many) - Seguros aceptados
+//
+// PROFESIONAL:
+//   ├── establecimiento (Many-to-One) - Lugar de trabajo
+//   ├── especialidades (Many-to-Many) - Especialidades médicas
+//   ├── turnos (One-to-Many) - Agenda de citas
+//   └── historialConsultas (One-to-Many) - Consultas realizadas
+//
+// TURNO: ⭐ ENTIDAD CENTRAL
+//   ├── paciente (Many-to-One) - Quién solicita
+//   ├── profesional (Many-to-One) - Quién atiende
+//   ├── especialidad (Many-to-One) - Tipo de consulta
+//   ├── establecimiento (Many-to-One) - Dónde se realiza
+//   └── historialConsultas (One-to-Many) - Registro post-consulta
+//
+// ==================================================================================
+// 📋 ENUMS DEFINIDOS:
+// ==================================================================================
+//
+// 🏥 TipoEstablecimiento:
+//   - CLINICA: Clínica privada
+//   - LABORATORIO: Laboratorio de análisis
+//   - SANATORIO: Sanatorio privado  
+//   - PARTICULAR: Consultorio particular
+//   - HOSPITAL: Hospital público/privado
+//   - CENTRO_MEDICO: Centro médico integral
+//
+// 📅 EstadoTurno:
+//   - PENDIENTE: Recién creado, esperando confirmación
+//   - CONFIRMADO: Confirmado por paciente/profesional
+//   - COMPLETADO: Consulta realizada exitosamente
+//   - CANCELADO: Cancelado por alguna de las partes
+//   - NO_ASISTIO: Paciente no se presentó a la cita
+//
+// ==================================================================================
+// 🔧 DECISIONES TÉCNICAS:
+// ==================================================================================
+//
+// ⏰ CAMPOS DE TIEMPO:
+//   - horarioApertura/horarioCierre: VARCHAR(10) formato "HH:MM"
+//   - horaTurno/horaConsulta: VARCHAR(10) formato "HH:MM"
+//   - Razón: Evitar problemas de conversión MySQL TIME ↔ Prisma DateTime
+//
+// 🔑 CAMPOS ÚNICOS:
+//   - dni (pacientes): Documento único por paciente
+//   - email (pacientes): Email único por paciente
+//   - matricula (profesionales): Matrícula profesional única
+//   - numeroReferencia (turnos): Número autogenerado único por turno
+//   - nombre (especialidades/obras_sociales): Nombres únicos
+//
+// 📝 TIMESTAMPS AUTOMÁTICOS:
+//   - createdAt: Momento de creación (automático)
+//   - updatedAt: Última modificación (automático en updates)
+//
+// 🗑️ SOFT DELETE:
+//   - Campo 'activo' en lugar de eliminar registros físicamente
+//   - Permite mantener historial e integridad referencial
+//
+// 🚀 ÍNDICES DE OPTIMIZACIÓN:
+//   - idx_dni, idx_email (pacientes): Búsquedas frecuentes
+//   - idx_matricula (profesionales): Búsqueda por matrícula
+//   - idx_fecha, idx_estado (turnos): Consultas por fecha y estado  
+//   - idx_tipo, idx_activo (establecimientos): Filtros comunes
+//
+// ==================================================================================
+// 🌐 CONEXIÓN CON NESTJS:
+// ==================================================================================
+//
+// Esta schema se conecta con el backend NestJS de la siguiente manera:
+//
+// 1. 📦 GENERACIÓN DE CLIENTE:
+//    - Comando: npx prisma generate
+//    - Genera: @prisma/client en node_modules
+//    - Usado en: [modulo].service.ts de cada módulo
+//
+// 2. 🔗 SERVICIOS NESTJS:
+//    - pacientes.service.ts ← Paciente, ObraSocial
+//    - establecimientos.service.ts ← Establecimiento, TipoEstablecimiento
+//    - profesionales.service.ts ← Profesional, ProfesionalEspecialidad
+//    - especialidades.service.ts ← Especialidad
+//    - turnos.service.ts ← Turno, EstadoTurno (⭐ principal)
+//    - obras-sociales.service.ts ← ObraSocial, EstablecimientoObraSocial
+//    - historial-consultas.service.ts ← HistorialConsulta
+//
+// 3. 🌍 VARIABLES DE ENTORNO:
+//    - DATABASE_URL: Conexión MySQL definida en .env
+//    - Formato: "mysql://user:password@host:port/database"
+//    - Ejemplo: "mysql://root:@localhost:3306/anacron"
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model ObraSocial {
+  id                          Int                         @id @default(autoincrement())
+  nombre                      String                      @unique(map: "nombre") @db.VarChar(100)
+  tipoCobertura               String?                     @map("tipo_cobertura") @db.VarChar(50)
+  activo                      Boolean?                    @default(true)
+  createdAt                   DateTime                    @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt                   DateTime                    @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  establecimientoObraSociales EstablecimientoObraSocial[]
+  pacientes                   Paciente[]
+
+  @@map("obras_sociales")
+}
+
+model Paciente {
+  id                 Int                 @id @default(autoincrement())
+  nombre             String              @db.VarChar(50)
+  apellido           String              @db.VarChar(50)
+  dni                String              @unique(map: "dni") @db.VarChar(20)
+  email              String?             @unique(map: "email") @db.VarChar(100)
+  telefono           String?             @db.VarChar(20)
+  fechaNacimiento    DateTime?           @map("fecha_nacimiento") @db.Date
+  obraSocialId       Int?                @map("obra_social_id")
+  activo             Boolean?            @default(true)
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt          DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  historialConsultas HistorialConsulta[]
+  obraSocial         ObraSocial?         @relation(fields: [obraSocialId], references: [id], onUpdate: Restrict, map: "pacientes_ibfk_1")
+  turnos             Turno[]
+
+  @@index([dni], map: "idx_dni")
+  @@index([email], map: "idx_email")
+  @@index([obraSocialId], map: "obra_social_id")
+  @@map("pacientes")
+}
+
+model Establecimiento {
+  id                          Int                         @id @default(autoincrement())
+  nombre                      String                      @db.VarChar(100)
+  tipo                        TipoEstablecimiento
+  direccion                   String?                     @db.VarChar(200)
+  telefono                    String?                     @db.VarChar(20)
+  email                       String?                     @db.VarChar(100)
+  horarioApertura             String?                     @map("horario_apertura") @db.VarChar(10)
+  horarioCierre               String?                     @map("horario_cierre") @db.VarChar(10)
+  activo                      Boolean?                    @default(true)
+  createdAt                   DateTime                    @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt                   DateTime                    @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  establecimientoObraSociales EstablecimientoObraSocial[]
+  historialConsultas          HistorialConsulta[]
+  profesionales               Profesional[]
+  turnos                      Turno[]
+
+  @@index([tipo], map: "idx_tipo")
+  @@index([activo], map: "idx_activo")
+  @@map("establecimientos")
+}
+
+model Especialidad {
+  id                        Int                       @id @default(autoincrement())
+  nombre                    String                    @unique(map: "nombre") @db.VarChar(100)
+  descripcion               String?                   @db.Text
+  duracionEstimadaMinutos   Int?                      @default(30) @map("duracion_estimada_minutos")
+  activo                    Boolean?                  @default(true)
+  createdAt                 DateTime                  @default(now()) @map("created_at") @db.Timestamp(0)
+  historialConsultas        HistorialConsulta[]
+  profesionalEspecialidades ProfesionalEspecialidad[]
+  turnos                    Turno[]
+
+  @@index([activo], map: "idx_activo")
+  @@map("especialidades")
+}
+
+model Profesional {
+  id                        Int                       @id @default(autoincrement())
+  nombre                    String                    @db.VarChar(50)
+  apellido                  String                    @db.VarChar(50)
+  matricula                 String?                   @unique(map: "matricula") @db.VarChar(50)
+  telefono                  String?                   @db.VarChar(20)
+  email                     String?                   @db.VarChar(100)
+  establecimientoId         Int                       @map("establecimiento_id")
+  activo                    Boolean?                  @default(true)
+  createdAt                 DateTime                  @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt                 DateTime                  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  historialConsultas        HistorialConsulta[]
+  profesionalEspecialidades ProfesionalEspecialidad[]
+  establecimiento           Establecimiento           @relation(fields: [establecimientoId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "profesionales_ibfk_1")
+  turnos                    Turno[]
+
+  @@index([matricula], map: "idx_matricula")
+  @@index([establecimientoId], map: "idx_establecimiento")
+  @@map("profesionales")
+}
+
+model ProfesionalEspecialidad {
+  id             Int          @id @default(autoincrement())
+  profesionalId  Int          @map("profesional_id")
+  especialidadId Int          @map("especialidad_id")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamp(0)
+  profesional    Profesional  @relation(fields: [profesionalId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "profesional_especialidad_ibfk_1")
+  especialidad   Especialidad @relation(fields: [especialidadId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "profesional_especialidad_ibfk_2")
+
+  @@unique([profesionalId, especialidadId], map: "unique_prof_esp")
+  @@index([especialidadId], map: "especialidad_id")
+  @@map("profesional_especialidad")
+}
+
+model Turno {
+  id                 Int                 @id @default(autoincrement())
+  pacienteId         Int                 @map("paciente_id")
+  profesionalId      Int                 @map("profesional_id")
+  especialidadId     Int                 @map("especialidad_id")
+  establecimientoId  Int                 @map("establecimiento_id")
+  fechaTurno         DateTime            @map("fecha_turno") @db.Date
+  horaTurno          String              @map("hora_turno") @db.VarChar(10)
+  estado             EstadoTurno?        @default(PENDIENTE)
+  observaciones      String?             @db.Text
+  numeroReferencia   String?             @unique(map: "numero_referencia") @map("numero_referencia") @db.VarChar(50)
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt          DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  historialConsultas HistorialConsulta[]
+  paciente           Paciente            @relation(fields: [pacienteId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_1")
+  profesional        Profesional         @relation(fields: [profesionalId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_2")
+  especialidad       Especialidad        @relation(fields: [especialidadId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_3")
+  establecimiento    Establecimiento     @relation(fields: [establecimientoId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_4")
+
+  @@index([fechaTurno], map: "idx_fecha")
+  @@index([estado], map: "idx_estado")
+  @@index([pacienteId], map: "idx_paciente")
+  @@index([profesionalId], map: "idx_profesional")
+  @@index([numeroReferencia], map: "idx_numero_ref")
+  @@index([especialidadId], map: "especialidad_id")
+  @@index([establecimientoId], map: "establecimiento_id")
+  @@map("turnos")
+}
+
+model HistorialConsulta {
+  id                Int             @id @default(autoincrement())
+  pacienteId        Int             @map("paciente_id")
+  profesionalId     Int             @map("profesional_id")
+  especialidadId    Int             @map("especialidad_id")
+  establecimientoId Int             @map("establecimiento_id")
+  turnoId           Int?            @map("turno_id")
+  fechaConsulta     DateTime        @map("fecha_consulta") @db.Date
+  horaConsulta      String          @map("hora_consulta") @db.VarChar(10)
+  tipoConsulta      String?         @map("tipo_consulta") @db.VarChar(100)
+  diagnostico       String?         @db.Text
+  tratamiento       String?         @db.Text
+  observaciones     String?         @db.Text
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamp(0)
+  paciente          Paciente        @relation(fields: [pacienteId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "historial_consultas_ibfk_1")
+  profesional       Profesional     @relation(fields: [profesionalId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "historial_consultas_ibfk_2")
+  especialidad      Especialidad    @relation(fields: [especialidadId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "historial_consultas_ibfk_3")
+  establecimiento   Establecimiento @relation(fields: [establecimientoId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "historial_consultas_ibfk_4")
+  turno             Turno?          @relation(fields: [turnoId], references: [id], onUpdate: Restrict, map: "historial_consultas_ibfk_5")
+
+  @@index([fechaConsulta], map: "idx_fecha_consulta")
+  @@index([pacienteId], map: "idx_paciente_historial")
+  @@index([profesionalId], map: "idx_profesional_historial")
+  @@index([especialidadId], map: "especialidad_id")
+  @@index([establecimientoId], map: "establecimiento_id")
+  @@index([turnoId], map: "turno_id")
+  @@map("historial_consultas")
+}
+
+model EstablecimientoObraSocial {
+  id                Int             @id @default(autoincrement())
+  establecimientoId Int             @map("establecimiento_id")
+  obraSocialId      Int             @map("obra_social_id")
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamp(0)
+  establecimiento   Establecimiento @relation(fields: [establecimientoId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "establecimiento_obra_social_ibfk_1")
+  obraSocial        ObraSocial      @relation(fields: [obraSocialId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "establecimiento_obra_social_ibfk_2")
+
+  @@unique([establecimientoId, obraSocialId], map: "unique_est_obra")
+  @@index([obraSocialId], map: "obra_social_id")
+  @@map("establecimiento_obra_social")
+}
+
+enum TipoEstablecimiento {
+  CLINICA
+  LABORATORIO
+  SANATORIO
+  PARTICULAR
+  HOSPITAL
+  CENTRO_MEDICO
+}
+
+enum EstadoTurno {
+  PENDIENTE
+  CONFIRMADO
+  COMPLETADO
+  CANCELADO
+  NO_ASISTIO
+}
