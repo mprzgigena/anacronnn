@@ -96,7 +96,7 @@
                   {{ paciente.dni }}
                 </div>
                 <div class="text-sm text-gray-500">
-                  {{ getEdad(paciente.fecha_nacimiento) }} años
+                  {{ getEdad(paciente.fechaNacimiento) }} años
                 </div>
               </td>
               <td class="table-cell">
@@ -120,7 +120,7 @@
               </td>
               <td class="table-cell">
                 <div class="text-sm text-gray-900">
-                  {{ formatDate(paciente.fecha_nacimiento) }}
+                  {{ formatDate(paciente.fechaNacimiento) }}
                 </div>
               </td>
               <td class="table-cell">
@@ -133,7 +133,7 @@
               </td>
               <td class="table-cell">
                 <span class="text-sm text-gray-900">
-                  {{ getObraSocialNombre(paciente.obra_social_id) }}
+                  {{ getObraSocialNombre(paciente.obraSocialId) }}
                 </span>
               </td>
               <td class="table-cell">
@@ -324,7 +324,7 @@
             </label>
             <select
               id="obra-social"
-              v-model="formPaciente.obra_social_id"
+              v-model="formPaciente.obraSocialId"
               class="input-field mt-1"
             >
               <option value="">Sin obra social</option>
@@ -380,12 +380,12 @@ export default {
       nombre: '',
       apellido: '',
       dni: '',
-      fecha_nacimiento: '',
+      fechaNacimiento: '',
       genero: 'M',
       telefono: '',
       email: '',
       direccion: '',
-      obra_social_id: ''
+      obraSocialId: ''
     })
 
     // Computed properties
@@ -407,7 +407,7 @@ export default {
       // Filtro por obra social
       if (filtros.obraSocialId) {
         resultado = resultado.filter(paciente => 
-          paciente.obra_social_id == filtros.obraSocialId
+          paciente.obraSocialId == filtros.obraSocialId
         )
       }
 
@@ -452,12 +452,12 @@ export default {
         nombre: '',
         apellido: '',
         dni: '',
-        fecha_nacimiento: '',
+        fechaNacimiento: '',
         genero: 'M',
         telefono: '',
         email: '',
         direccion: '',
-        obra_social_id: ''
+        obraSocialId: ''
       })
     }
 
@@ -469,12 +469,12 @@ export default {
         nombre: paciente.nombre || '',
         apellido: paciente.apellido || '',
         dni: paciente.dni || '',
-        fecha_nacimiento: paciente.fecha_nacimiento || '',
+        fechaNacimiento: paciente.fechaNacimiento ? paciente.fechaNacimiento.split('T')[0] : '',
         genero: paciente.genero || 'M',
         telefono: paciente.telefono || '',
         email: paciente.email || '',
         direccion: paciente.direccion || '',
-        obra_social_id: paciente.obra_social_id || ''
+        obraSocialId: paciente.obraSocialId || ''
       })
       
       mostrarModalPaciente.value = true
@@ -494,11 +494,19 @@ export default {
         const pacienteData = { ...formPaciente }
         
         // Limpiar campos vacíos
-        if (!pacienteData.obra_social_id) {
-          pacienteData.obra_social_id = null
+        if (!pacienteData.obraSocialId) {
+        pacienteData.obraSocialId = null
         }
 
+        // Si hay fecha, convertirla a formato ISO
+        if (pacienteData.fechaNacimiento) {
+          pacienteData.fechaNacimiento = new Date(pacienteData.fechaNacimiento).toISOString()
+        }
+
+
         if (modoEdicion.value && pacienteEditando.value) {
+          console.log('Datos enviados al backend:', JSON.stringify(pacienteData, null, 2))
+
           await pacientesAPI.update(pacienteEditando.value.id, pacienteData)
           
           // Actualizar en la lista local

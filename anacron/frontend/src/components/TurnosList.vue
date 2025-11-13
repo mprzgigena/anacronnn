@@ -121,10 +121,10 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="turno in turnosFiltrados" :key="turno.id" class="hover:bg-gray-50">
               <td class="table-cell">
-                {{ formatDate(turno.fecha) }}
+                {{ formatDate(turno.fechaTurno) }}
               </td>
               <td class="table-cell">
-                {{ formatTime(turno.hora) }}
+                {{ formatTime(turno.horaTurno) }}
               </td>
               <td class="table-cell">
                 <div>
@@ -146,7 +146,7 @@
               </td>
               <td class="table-cell">
                 <span class="text-sm text-gray-900">
-                  {{ turno.profesional?.especialidad?.nombre }}
+                  {{ turno.profesionalId?.especialidadId?.nombre }}
                 </span>
               </td>
               <td class="table-cell">
