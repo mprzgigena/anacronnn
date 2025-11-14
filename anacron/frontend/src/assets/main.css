@@ -72,11 +72,30 @@ body {
 
 /* Shadow styles for medical theme */
 .shadow-medical {
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06), 0 0 0 1px rgba(37, 99, 235, 0.05);
 }
 
 .shadow-card {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-card-hover {
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15), 0 2px 6px 0 rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(37, 99, 235, 0.1);
+}
+
+/* Bordes mejorados para cards médicas */
+.border-card {
+  border: 2px solid rgba(229, 231, 235, 0.8);
+  border-radius: 0.75rem;
+}
+
+.border-card-hover {
+  border: 2px solid rgba(37, 99, 235, 0.2);
+}
+
+.border-card-medical {
+  border: 2px solid rgba(37, 99, 235, 0.1);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(249, 250, 251, 0.9));
 }
 
 /* Animation for loading states */

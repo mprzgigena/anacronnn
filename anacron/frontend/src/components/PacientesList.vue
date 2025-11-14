@@ -1,16 +1,23 @@
 <template>
   <div class="space-y-6">
     <!-- Header Section -->
-    <div class="bg-white shadow-card rounded-xl p-6">
+    <div class="bg-gradient-to-r from-white via-purple-50 to-white shadow-medical rounded-xl p-4 sm:p-6 border-2 border-purple-200">
       <div class="sm:flex sm:items-center sm:justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-medical-dark">Gestión de Pacientes</h1>
-          <p class="mt-2 text-sm text-gray-600">Administra la información de los pacientes</p>
+        <div class="flex items-center space-x-3 mb-4 sm:mb-0">
+          <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-medical-dark">Gestión de Pacientes</h1>
+            <p class="text-sm text-gray-600 hidden sm:block">Administra la información de los pacientes</p>
+          </div>
         </div>
-        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+        <div class="w-full sm:w-auto">
           <button 
             @click="mostrarModalPaciente = true"
-            class="btn-primary"
+            class="w-full sm:w-auto btn-primary inline-flex items-center justify-center px-4 py-2 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
           >
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -20,7 +27,7 @@
         </div>
       </div>
 
-      <!-- Filtros y Búsqueda -->
+      <!-- Filtros y Búsqueda Responsive -->
       <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div class="sm:col-span-2">
           <label for="buscar" class="block text-sm font-medium text-gray-700">Buscar</label>
@@ -51,9 +58,19 @@
       </div>
     </div>
 
-    <!-- Loading State -->
+    <!-- Loading State con animación médica -->
     <div v-if="cargando" class="flex justify-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-medical-primary"></div>
+      <div class="text-center space-y-4">
+        <div class="relative">
+          <div class="animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mx-auto"></div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <svg class="w-6 h-6 text-purple-600 animate-pulse-medical" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+            </svg>
+          </div>
+        </div>
+        <p class="text-purple-600 font-medium animate-bounce-subtle">Cargando información de pacientes...</p>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -70,10 +87,16 @@
     </div>
 
     <!-- Pacientes Grid/List -->
-    <div v-else-if="pacientesFiltrados.length > 0" class="bg-white shadow-card rounded-xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-medium text-medical-dark">
-          Pacientes Registrados ({{ pacientesFiltrados.length }})
+    <div v-else-if="pacientesFiltrados.length > 0" class="bg-gradient-to-r from-white to-purple-50 shadow-medical rounded-xl overflow-hidden border-2 border-purple-200">
+      <div class="px-6 py-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-200">
+        <h2 class="text-xl font-semibold text-medical-dark flex items-center">
+          <svg class="w-6 h-6 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+          Pacientes Registrados
+          <span class="ml-2 px-3 py-1 bg-purple-600 text-white rounded-full text-sm font-medium">
+            {{ pacientesFiltrados.length }}
+          </span>
         </h2>
       </div>
       
@@ -610,11 +633,11 @@ export default {
 }
 
 .table-header {
-  @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+  @apply px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
 }
 
 .table-cell {
-  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+  @apply px-6 py-6 text-sm text-gray-900;
 }
 
 .modal-overlay {
