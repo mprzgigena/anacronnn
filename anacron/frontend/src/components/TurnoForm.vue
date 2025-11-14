@@ -374,12 +374,13 @@ export default {
       try {
         const turno = await turnosAPI.getById(turnoId.value)
         
+        
         // Llenar el formulario con los datos del turno
         Object.assign(form, {
           pacienteId: turno.pacienteId,
           profesionalId: turno.profesionalId,
           especialidadId: turno.especialidadId,
-          fechaTurno: turno.fechaTurno,
+          fechaTurno:  toInputDate(turno.fechaTurno),
           horaTurno: turno.horaTurno,
           estado: turno.estado,
           observaciones: turno.observaciones || ''
@@ -428,6 +429,14 @@ export default {
     const filtrarProfesionales = () => {
       form.profesionalId = '' // Limpiar selección de profesional
     }
+
+    function toInputDate(dateString) {
+    const d = new Date(dateString)
+    const offset = d.getTimezoneOffset()
+    const local = new Date(d.getTime() - offset * 60000)
+    return local.toISOString().split("T")[0]
+  }
+
 
     const validarFormulario = () => {
       validationErrors.value = {}

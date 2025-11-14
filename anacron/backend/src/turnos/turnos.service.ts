@@ -386,7 +386,15 @@ export class TurnosService {
   update(id: number, updateTurnoDto: any) {
     return prisma.turno.update({
       where: { id },
-      data: updateTurnoDto,
+      data: {
+      ...updateTurnoDto,
+      fechaTurno: updateTurnoDto.fechaTurno
+        ? new Date(updateTurnoDto.fechaTurno).toISOString()
+        : undefined,
+      horaTurno: updateTurnoDto.horaTurno
+        ? updateTurnoDto.horaTurno
+        : undefined,
+    },
       include: {
         paciente: true,
         profesional: true,
