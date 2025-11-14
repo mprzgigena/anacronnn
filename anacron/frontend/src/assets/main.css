@@ -4,8 +4,8 @@
 
 /* Medical theme custom styles */
 :root {
-  --medical-primary: #0066cc;
-  --medical-secondary: #4a90e2;
+  --medical-primary: #2563eb;
+  --medical-secondary: #60a5fa;
   --medical-accent: #00a65a;
   --medical-warning: #f39c12;
   --medical-danger: #e74c3c;
@@ -72,7 +72,7 @@ body {
 
 /* Shadow styles for medical theme */
 .shadow-medical {
-  box-shadow: 0 4px 6px -1px rgba(0, 102, 204, 0.1), 0 2px 4px -1px rgba(0, 102, 204, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06);
 }
 
 .shadow-card {

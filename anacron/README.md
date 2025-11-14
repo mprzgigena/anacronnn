@@ -44,13 +44,13 @@ npm run start:dev
 
 ### Frontend
 ```bash
-cd frontend  
-npm install
+    cd frontend  
+    npm install
 npm run dev
 ```
 
 ## 🌐 URLs del Sistema
-- **Frontend**: http://localhost:5173
+- **Frontend**: 
 - **Backend API**: http://localhost:3000
 
 ## 📚 Funcionalidades

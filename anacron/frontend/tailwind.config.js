@@ -9,8 +9,8 @@ export default {
       colors: {
         // Colores médicos profesionales
         medical: {
-          primary: '#0066cc',     // Azul médico principal
-          secondary: '#4a90e2',   // Azul claro
+          primary: '#2563eb',     // Azul médico suave (blue-600)
+          secondary: '#60a5fa',   // Azul claro (blue-400)
           accent: '#00a65a',      // Verde médico (éxito)
           warning: '#f39c12',     // Naranja (precaución)
           danger: '#e74c3c',      // Rojo (urgente)
@@ -36,7 +36,7 @@ export default {
         'xl': '1rem',
       },
       boxShadow: {
-        'medical': '0 4px 6px -1px rgba(0, 102, 204, 0.1), 0 2px 4px -1px rgba(0, 102, 204, 0.06)',
+        'medical': '0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06)',
         'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
       }
     },

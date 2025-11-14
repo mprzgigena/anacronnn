@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="min-h-screen bg-gray-50">
+  <div id="app" class="min-h-screen bg-gray-50 flex flex-col">
     <!-- Header Navigation -->
     <header class="bg-medical-primary shadow-medical">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -66,7 +66,7 @@
       
       <!-- Mobile menu -->
       <div v-if="mobileMenuOpen" class="md:hidden">
-        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-medical-primary border-t border-blue-700">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-medical-primary border-t border-blue-600">
           <router-link to="/turnos" class="nav-link-mobile" @click="mobileMenuOpen = false">
             Turnos
           </router-link>
@@ -81,16 +81,17 @@
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <main class="flex-1 max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 w-full">
       <div class="px-4 py-6 sm:px-0">
         <router-view />
       </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-medical-dark text-white mt-auto">
+    <footer class="bg-medical-dark text-white mt-auto flex-shrink-0">
       <div class="max-w-7xl mx-auto py-4 px-4 text-center text-sm">
-        <p>ANACRON - Sistema de Gestión Médica &copy; {{ currentYear }}</p>
+        <p>ANACRON - by ATLASTECH
+          &copy; {{ currentYear }}</p>
       </div>
     </footer>
   </div>
@@ -115,14 +116,14 @@ export default {
 
 <style scoped>
 .nav-link {
-  @apply inline-flex items-center px-1 pt-1 text-sm font-medium text-blue-100 hover:text-white transition-colors duration-200;
+  @apply inline-flex items-center px-1 pt-1 text-sm font-medium text-blue-200 hover:text-white transition-colors duration-200;
 }
 
 .nav-link-active {
-  @apply text-white border-b-2 border-blue-200;
+  @apply text-white border-b-2 border-blue-300;
 }
 
 .nav-link-mobile {
-  @apply block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:text-white hover:bg-blue-700 transition-colors duration-200;
+  @apply block px-3 py-2 rounded-md text-base font-medium text-blue-200 hover:text-white hover:bg-blue-600 transition-colors duration-200;
 }
 </style>

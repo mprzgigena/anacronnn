@@ -123,7 +123,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 008 10.172V5L8 4z"></path>
                 </svg>
                 <span class="font-medium text-gray-900">
-                  {{ getEspecialidadNombre(profesional.especialidad_id) }}
+                  {{ getProfesionalEspecialidades(profesional) }}
                 </span>
               </div>
 
@@ -132,7 +132,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                 </svg>
                 <span class="text-gray-700">
-                  {{ getEstablecimientoNombre(profesional.establecimiento_id) }}
+                  {{ profesional.establecimiento?.nombre || 'Sin establecimiento' }}
                 </span>
               </div>
 
@@ -267,7 +267,7 @@
               </label>
               <select
                 id="especialidad"
-                v-model="formProfesional.especialidad_id"
+                v-model="formProfesional.especialidadId"
                 required
                 class="input-field mt-1"
               >
@@ -285,7 +285,7 @@
             </label>
             <select
               id="establecimiento"
-              v-model="formProfesional.establecimiento_id"
+              v-model="formProfesional.establecimientoId"
               required
               class="input-field mt-1"
             >
@@ -370,8 +370,8 @@ export default {
       nombre: '',
       apellido: '',
       matricula: '',
-      especialidad_id: '',
-      establecimiento_id: '',
+      especialidadId: '',
+      establecimientoId: '',
       telefono: '',
       email: ''
     })
@@ -393,14 +393,14 @@ export default {
       // Filtro por especialidad
       if (filtros.especialidadId) {
         resultado = resultado.filter(profesional => 
-          profesional.especialidad_id == filtros.especialidadId
+          profesional.profesionalEspecialidades?.some(pe => pe.especialidadId == filtros.especialidadId)
         )
       }
 
       // Filtro por establecimiento
       if (filtros.establecimientoId) {
         resultado = resultado.filter(profesional => 
-          profesional.establecimiento_id == filtros.establecimientoId
+          profesional.establecimientoId == filtros.establecimientoId
         )
       }
 
@@ -442,8 +442,8 @@ export default {
         nombre: '',
         apellido: '',
         matricula: '',
-        especialidad_id: '',
-        establecimiento_id: '',
+        especialidadId: '',
+        establecimientoId: '',
         telefono: '',
         email: ''
       })
@@ -457,8 +457,8 @@ export default {
         nombre: profesional.nombre || '',
         apellido: profesional.apellido || '',
         matricula: profesional.matricula || '',
-        especialidad_id: profesional.especialidad_id || '',
-        establecimiento_id: profesional.establecimiento_id || '',
+        especialidadId: profesional.profesionalEspecialidades?.[0]?.especialidadId || '',
+        establecimientoId: profesional.establecimientoId || '',
         telefono: profesional.telefono || '',
         email: profesional.email || ''
       })
@@ -477,25 +477,97 @@ export default {
       try {
         guardando.value = true
 
-        const profesionalData = { ...formProfesional }
-
-        if (modoEdicion.value && profesionalEditando.value) {
-          await profesionalesAPI.update(profesionalEditando.value.id, profesionalData)
-          
-          // Actualizar en la lista local
-          const index = profesionales.value.findIndex(p => p.id === profesionalEditando.value.id)
-          if (index !== -1) {
-            profesionales.value[index] = { ...profesionales.value[index], ...profesionalData }
-          }
-        } else {
-          const nuevoProfesional = await profesionalesAPI.create(profesionalData)
-          profesionales.value.push(nuevoProfesional)
+        // Validaciones básicas
+        if (!formProfesional.nombre.trim()) {
+          alert('El nombre es requerido')
+          return
+        }
+        if (!formProfesional.apellido.trim()) {
+          alert('El apellido es requerido')
+          return
+        }
+        if (!formProfesional.establecimientoId) {
+          alert('El establecimiento es requerido')
+          return
         }
 
+        // Preparar datos del profesional con tipos correctos
+        const { especialidadId, ...formData } = formProfesional
+        const profesionalData = {
+          ...formData,
+          establecimientoId: parseInt(formData.establecimientoId),
+          nombre: formData.nombre.trim(),
+          apellido: formData.apellido.trim(),
+          matricula: formData.matricula?.trim() || null,
+          telefono: formData.telefono?.trim() || null,
+          email: formData.email?.trim() || null
+        }
+
+        if (modoEdicion.value && profesionalEditando.value) {
+          // Actualizar profesional
+          await profesionalesAPI.update(profesionalEditando.value.id, profesionalData)
+          
+          // Si hay especialidad seleccionada, gestionarla por separado
+          if (especialidadId) {
+            try {
+              // Primero remover especialidades existentes (simplificado)
+              // Luego asignar la nueva
+              const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/profesionales/${profesionalEditando.value.id}/especialidades/${parseInt(especialidadId)}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              })
+              
+              if (!response.ok) {
+                console.warn('Error asignando especialidad:', await response.text())
+              }
+            } catch (error) {
+              console.warn('Error asignando especialidad:', error)
+            }
+          }
+        } else {
+          // Crear nuevo profesional
+          console.log('Enviando datos:', profesionalData)
+          const nuevoProfesional = await profesionalesAPI.create(profesionalData)
+          
+          // Si hay especialidad seleccionada, asignarla
+          if (especialidadId && nuevoProfesional.id) {
+            try {
+              const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/profesionales/${nuevoProfesional.id}/especialidades/${parseInt(especialidadId)}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              })
+              
+              if (!response.ok) {
+                const errorText = await response.text()
+                console.warn('Error asignando especialidad:', errorText)
+                // No fallar por esto, solo avisar
+                alert(`Profesional creado exitosamente, pero hubo un problema asignando la especialidad: ${errorText}`)
+              }
+            } catch (error) {
+              console.warn('Error asignando especialidad:', error)
+              alert('Profesional creado exitosamente, pero hubo un problema asignando la especialidad.')
+            }
+          }
+        }
+
+        // Recargar datos para obtener las relaciones correctas
+        await cargarDatos()
         cerrarModal()
       } catch (err) {
         console.error('Error guardando profesional:', err)
-        alert('Error al guardar el profesional. Verifica los datos e intenta nuevamente.')
+        let errorMessage = 'Error desconocido'
+        
+        if (err.message) {
+          errorMessage = err.message
+        } else if (typeof err === 'string') {
+          errorMessage = err
+        }
+        
+        alert(`Error al guardar el profesional: ${errorMessage}. Verifica los datos e intenta nuevamente.`)
       } finally {
         guardando.value = false
       }
@@ -517,16 +589,14 @@ export default {
       }
     }
 
-    const getEspecialidadNombre = (especialidadId) => {
-      if (!especialidadId) return 'Sin especialidad'
-      const especialidad = especialidades.value.find(e => e.id == especialidadId)
-      return especialidad ? especialidad.nombre : 'Desconocida'
-    }
-
-    const getEstablecimientoNombre = (establecimientoId) => {
-      if (!establecimientoId) return 'Sin establecimiento'
-      const establecimiento = establecimientos.value.find(e => e.id == establecimientoId)
-      return establecimiento ? establecimiento.nombre : 'Desconocido'
+    const getProfesionalEspecialidades = (profesional) => {
+      if (!profesional.profesionalEspecialidades || profesional.profesionalEspecialidades.length === 0) {
+        return 'Sin especialidad'
+      }
+      return profesional.profesionalEspecialidades
+        .map(pe => pe.especialidad?.nombre)
+        .filter(nombre => nombre)
+        .join(', ') || 'Sin especialidad'
     }
 
     // Cargar datos al montar
@@ -556,8 +626,7 @@ export default {
       guardarProfesional,
       confirmarEliminacion,
       eliminarProfesional,
-      getEspecialidadNombre,
-      getEstablecimientoNombre
+      getProfesionalEspecialidades
     }
   }
 }
