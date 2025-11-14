@@ -296,10 +296,10 @@ model ProfesionalEspecialidad {
 
 model Turno {
   id                 Int                 @id @default(autoincrement())
-  pacienteId         Int                 @map("paciente_id")
+  pacienteId         Int?                 @map("paciente_id")
   profesionalId      Int                 @map("profesional_id")
-  especialidadId     Int                 @map("especialidad_id")
-  establecimientoId  Int                 @map("establecimiento_id")
+  especialidadId     Int?                 @map("especialidad_id")
+  establecimientoId  Int?                 @map("establecimiento_id")
   fechaTurno         DateTime            @map("fecha_turno") @db.Date
   horaTurno          String              @map("hora_turno") @db.VarChar(10)
   estado             EstadoTurno?        @default(PENDIENTE)
@@ -308,10 +308,10 @@ model Turno {
   createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt          DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
   historialConsultas HistorialConsulta[]
-  paciente           Paciente            @relation(fields: [pacienteId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_1")
-  profesional        Profesional         @relation(fields: [profesionalId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_2")
-  especialidad       Especialidad        @relation(fields: [especialidadId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_3")
-  establecimiento    Establecimiento     @relation(fields: [establecimientoId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_4")
+  paciente           Paciente?            @relation(fields: [pacienteId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_1")
+  profesional        Profesional?       @relation(fields: [profesionalId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_2")
+  especialidad       Especialidad?        @relation(fields: [especialidadId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_3")
+  establecimiento    Establecimiento?     @relation(fields: [establecimientoId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "turnos_ibfk_4")
 
   @@index([fechaTurno], map: "idx_fecha")
   @@index([estado], map: "idx_estado")

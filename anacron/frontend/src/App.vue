@@ -10,7 +10,7 @@
               <h1 class="text-xl font-bold text-white">
                 ANACRON
               </h1>
-              <span class="ml-2 text-sm text-blue-100">Sistema Médico</span>
+              <img src="./assets/logoanacronpng.png" alt="Sistema Médico" style="height: 50px;"></img>
             </div>
             
             <!-- Navigation Links -->

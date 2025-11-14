@@ -146,7 +146,7 @@
               </td>
               <td class="table-cell">
                 <span class="text-sm text-gray-900">
-                  {{ turno.profesionalId?.especialidadId?.nombre }}
+                  {{ turno.especialidad?.nombre }}
                 </span>
               </td>
               <td class="table-cell">
@@ -275,11 +275,11 @@ export default {
 
     // Estados disponibles para el modal
     const estadosDisponibles = [
-      { valor: 'pendiente', etiqueta: 'Pendiente' },
-      { valor: 'confirmado', etiqueta: 'Confirmado' },
-      { valor: 'completado', etiqueta: 'Completado' },
-      { valor: 'cancelado', etiqueta: 'Cancelado' },
-      { valor: 'no_asistio', etiqueta: 'No Asistió' }
+      { valor: 'PENDIENTE', etiqueta: 'Pendiente' },
+      { valor: 'CONFIRMADO', etiqueta: 'Confirmado' },
+      { valor: 'COMPLEADO', etiqueta: 'Completado' },
+      { valor: 'CANCELADO', etiqueta: 'Cancelado' },
+      { valor: 'NO_ASISTIO', etiqueta: 'No Asistió' }
     ]
 
     // Computed properties
@@ -289,7 +289,7 @@ export default {
       // Filtro por fecha
       if (filtros.fecha) {
         resultado = resultado.filter(turno => 
-          turno.fecha === filtros.fecha
+          turno.fechaTurno === filtros.fecha
         )
       }
 
@@ -303,7 +303,7 @@ export default {
       // Filtro por profesional
       if (filtros.profesionalId) {
         resultado = resultado.filter(turno => 
-          turno.profesional_id == filtros.profesionalId
+          turno.profesionalId == filtros.profesionalId
         )
       }
 

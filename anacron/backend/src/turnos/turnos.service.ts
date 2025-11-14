@@ -364,21 +364,23 @@ export class TurnosService {
     });
   }
 
-  // Crear un nuevo turno
   create(createTurnoDto: any) {
-    return prisma.turno.create({
-      data: {
-        ...createTurnoDto,
-        numeroReferencia: this.generateReferenceNumber(),
-      },
-      include: {
-        paciente: true,
-        profesional: true,
-        especialidad: true,
-        establecimiento: true,
-      },
-    });
+  return prisma.turno.create({
+  data: {
+    pacienteId: createTurnoDto.pacienteId,
+    profesionalId: createTurnoDto.profesionalId,
+    especialidadId: createTurnoDto.especialidadId,
+    establecimientoId: createTurnoDto.establecimientoId,
+    fechaTurno: new Date(createTurnoDto.fechaTurno),
+    horaTurno: createTurnoDto.horaTurno,
+    estado: createTurnoDto.estado,
+    observaciones: createTurnoDto.observaciones,
+    numeroReferencia: this.generateReferenceNumber(),
   }
+});
+;
+}
+
 
   // Actualizar un turno
   update(id: number, updateTurnoDto: any) {

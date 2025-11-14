@@ -78,7 +78,7 @@
               </label>
               <select
                 id="paciente-select"
-                v-model="form.paciente_id"
+                v-model="form.pacienteId"
                 required
                 class="input-field mt-1"
               >
@@ -87,8 +87,8 @@
                   {{ paciente.apellido }}, {{ paciente.nombre }} - DNI: {{ paciente.dni }}
                 </option>
               </select>
-              <p v-if="validationErrors.paciente_id" class="mt-1 text-sm text-red-600">
-                {{ validationErrors.paciente_id }}
+              <p v-if="validationErrors.pacienteId" class="mt-1 text-sm text-red-600">
+                {{ validationErrors.pacienteId }}
               </p>
             </div>
           </div>
@@ -115,7 +115,7 @@
               </label>
               <select
                 id="especialidad-select"
-                v-model="especialidadSeleccionada"
+                v-model="form.especialidadId"
                 @change="filtrarProfesionales"
                 required
                 class="input-field mt-1"
@@ -133,18 +133,18 @@
               </label>
               <select
                 id="profesional-select"
-                v-model="form.profesional_id"
+                v-model="form.profesionalId"
                 required
                 class="input-field mt-1"
-                :disabled="!especialidadSeleccionada"
+                :disabled="!form.especialidadId"
               >
                 <option value="">Selecciona un profesional</option>
                 <option v-for="profesional in profesionalesFiltrados" :key="profesional.id" :value="profesional.id">
                   Dr. {{ profesional.apellido }}, {{ profesional.nombre }} - Mat: {{ profesional.matricula }}
                 </option>
               </select>
-              <p v-if="validationErrors.profesional_id" class="mt-1 text-sm text-red-600">
-                {{ validationErrors.profesional_id }}
+              <p v-if="validationErrors.profesionalId" class="mt-1 text-sm text-red-600">
+                {{ validationErrors.profesionalId }}
               </p>
             </div>
           </div>
@@ -169,7 +169,7 @@
             <input
               id="fecha"
               type="date"
-              v-model="form.fecha"
+              v-model="form.fechaTurno"
               required
               :min="fechaMinima"
               class="input-field mt-1"
@@ -186,18 +186,16 @@
             <input
               id="hora"
               type="time"
-              v-model="form.hora"
+              v-model="form.horaTurno"
               required
               class="input-field mt-1"
             />
-            <p v-if="validationErrors.hora" class="mt-1 text-sm text-red-600">
-              {{ validationErrors.hora }}
+            <p v-if="validationErrors.horaTurno" class="mt-1 text-sm text-red-600">
+              {{ validationErrors.horaTurno }}
             </p>
           </div>
         </div>
 
-        <!-- Detalles Adicionales -->
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
             <label for="estado" class="block text-sm font-medium text-gray-700">
               Estado
@@ -207,27 +205,14 @@
               v-model="form.estado"
               class="input-field mt-1"
             >
-              <option value="pendiente">Pendiente</option>
-              <option value="confirmado">Confirmado</option>
-              <option value="completado">Completado</option>
-              <option value="cancelado">Cancelado</option>
-              <option value="no_asistio">No Asistió</option>
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="CONFIRMADO">Confirmado</option>
+              <option value="COMPLETADO">Completado</option>
+              <option value="CANCELADO">Cancelado</option>
+              <option value="NO_ASISTIO">No Asistió</option>
             </select>
-          </div>
-
-          <div>
-            <label for="motivo" class="block text-sm font-medium text-gray-700">
-              Motivo de la Consulta
-            </label>
-            <input
-              id="motivo"
-              type="text"
-              v-model="form.motivo"
-              placeholder="Ej: Consulta general, control, etc."
-              class="input-field mt-1"
-            />
-          </div>
         </div>
+
 
         <!-- Observaciones -->
         <div>
@@ -298,12 +283,12 @@ export default {
 
     // Formulario
     const form = reactive({
-      paciente_id: '',
-      profesional_id: '',
-      fecha: '',
-      hora: '',
-      estado: 'pendiente',
-      motivo: '',
+      pacienteId: '',
+      profesionalId: '',
+      especialidadId: '',
+      fechaTurno: '',
+      horaTurno: '',
+      estado: 'PENDIENTE',
       observaciones: ''
     })
 
@@ -322,11 +307,11 @@ export default {
     })
 
     const pacienteSeleccionado = computed(() => {
-      return pacientes.value.find(p => p.id == form.paciente_id)
+      return pacientes.value.find(p => p.id == form.pacienteId)
     })
 
     const profesionalSeleccionado = computed(() => {
-      return profesionales.value.find(p => p.id == form.profesional_id)
+      return profesionales.value.find(p => p.id == form.profesionalId)
     })
 
     const pacientesFiltrados = computed(() => {
@@ -341,11 +326,14 @@ export default {
     })
 
     const profesionalesFiltrados = computed(() => {
-      if (!especialidadSeleccionada.value) return []
+      if (!form.especialidadId) return []
       
-      return profesionales.value.filter(profesional => 
-        profesional.especialidad_id == especialidadSeleccionada.value
+      return profesionales.value.filter(profesional =>
+      profesional.profesionalEspecialidades.some(
+        pe => pe.especialidadId == form.especialidadId
       )
+    )
+
     })
 
     // Métodos
@@ -377,25 +365,30 @@ export default {
       }
     }
 
+    const actualizarEspecialidad = () => {
+    form.especialidadId = especialidadSeleccionada.value
+  }
+
+
     const cargarTurno = async () => {
       try {
         const turno = await turnosAPI.getById(turnoId.value)
         
         // Llenar el formulario con los datos del turno
         Object.assign(form, {
-          paciente_id: turno.paciente_id,
-          profesional_id: turno.profesional_id,
-          fecha: turno.fecha,
-          hora: turno.hora,
+          pacienteId: turno.pacienteId,
+          profesionalId: turno.profesionalId,
+          especialidadId: turno.especialidadId,
+          fechaTurno: turno.fechaTurno,
+          horaTurno: turno.horaTurno,
           estado: turno.estado,
-          motivo: turno.motivo || '',
           observaciones: turno.observaciones || ''
         })
 
         // Encontrar y seleccionar la especialidad del profesional
-        const profesional = profesionales.value.find(p => p.id == turno.profesional_id)
+        const profesional = profesionales.value.find(p => p.id == turno.profesionalId)
         if (profesional) {
-          especialidadSeleccionada.value = profesional.especialidad_id
+          form.especialidadId = profesional.especialidadId
         }
       } catch (err) {
         error.value = 'Error al cargar los datos del turno'
@@ -411,13 +404,13 @@ export default {
         const paciente = pacientes.value.find(p => p.dni === dni)
         
         if (paciente) {
-          form.paciente_id = paciente.id
+          form.pacienteId = pacienteId
         } else {
           // Si no lo encuentra localmente, buscar en la API
           try {
             const pacienteEncontrado = await pacientesAPI.getByDni(dni)
             if (pacienteEncontrado) {
-              form.paciente_id = pacienteEncontrado.id
+              form.pacienteId = pacienteEncontrado.id
               // Agregar a la lista local si no está
               if (!pacientes.value.find(p => p.id === pacienteEncontrado.id)) {
                 pacientes.value.push(pacienteEncontrado)
@@ -433,28 +426,28 @@ export default {
     }
 
     const filtrarProfesionales = () => {
-      form.profesional_id = '' // Limpiar selección de profesional
+      form.profesionalId = '' // Limpiar selección de profesional
     }
 
     const validarFormulario = () => {
       validationErrors.value = {}
 
-      if (!form.paciente_id) {
-        validationErrors.value.paciente_id = 'Debe seleccionar un paciente'
+      if (!form.pacienteId) {
+        validationErrors.value.pacienteId = 'Debe seleccionar un paciente'
       }
 
-      if (!form.profesional_id) {
-        validationErrors.value.profesional_id = 'Debe seleccionar un profesional'
+      if (!form.profesionalId) {
+        validationErrors.value.profesionalId = 'Debe seleccionar un profesional'
       }
 
-      if (!form.fecha) {
-        validationErrors.value.fecha = 'Debe seleccionar una fecha'
-      } else if (new Date(form.fecha) < new Date(fechaMinima.value)) {
-        validationErrors.value.fecha = 'La fecha no puede ser anterior a hoy'
+      if (!form.fechaTurno) {
+        validationErrors.value.fechaTurno = 'Debe seleccionar una fecha'
+      } else if (new Date(form.fechaTurno) < new Date(fechaMinima.value)) {
+        validationErrors.value.fechaTurno = 'La fecha no puede ser anterior a hoy'
       }
 
-      if (!form.hora) {
-        validationErrors.value.hora = 'Debe seleccionar una hora'
+      if (!form.horaTurno) {
+        validationErrors.value.horaTurno = 'Debe seleccionar una hora'
       }
 
       return Object.keys(validationErrors.value).length === 0
@@ -485,15 +478,15 @@ export default {
     }
 
     // Watchers
-    watch(() => form.paciente_id, () => {
-      if (validationErrors.value.paciente_id) {
-        delete validationErrors.value.paciente_id
+    watch(() => form.pacienteId, () => {
+      if (validationErrors.value.pacienteId) {
+        delete validationErrors.value.pacienteId
       }
     })
 
-    watch(() => form.profesional_id, () => {
-      if (validationErrors.value.profesional_id) {
-        delete validationErrors.value.profesional_id
+    watch(() => form.profesionalId, () => {
+      if (validationErrors.value.profesionalId) {
+        delete validationErrors.value.profesionalId
       }
     })
 

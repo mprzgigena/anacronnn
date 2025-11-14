@@ -112,9 +112,6 @@
                     <div class="text-sm font-medium text-gray-900">
                       {{ paciente.apellido }}, {{ paciente.nombre }}
                     </div>
-                    <div class="text-sm text-gray-500">
-                      {{ paciente.genero }}
-                    </div>
                   </div>
                 </div>
               </td>
@@ -256,25 +253,11 @@
               <input
                 id="fecha-nacimiento"
                 type="date"
-                v-model="formPaciente.fecha_nacimiento"
+                v-model="formPaciente.fechaNacimiento"
                 required
                 :max="fechaMaxima"
                 class="input-field mt-1"
               />
-            </div>
-            <div>
-              <label for="genero" class="block text-sm font-medium text-gray-700">
-                Género
-              </label>
-              <select
-                id="genero"
-                v-model="formPaciente.genero"
-                class="input-field mt-1"
-              >
-                <option value="M">Masculino</option>
-                <option value="F">Femenino</option>
-                <option value="X">Otro</option>
-              </select>
             </div>
           </div>
 
@@ -304,18 +287,6 @@
             </div>
           </div>
 
-          <!-- Dirección -->
-          <div>
-            <label for="direccion" class="block text-sm font-medium text-gray-700">
-              Dirección
-            </label>
-            <input
-              id="direccion"
-              type="text"
-              v-model="formPaciente.direccion"
-              class="input-field mt-1"
-            />
-          </div>
 
           <!-- Obra Social -->
           <div>
@@ -381,10 +352,8 @@ export default {
       apellido: '',
       dni: '',
       fechaNacimiento: '',
-      genero: 'M',
       telefono: '',
       email: '',
-      direccion: '',
       obraSocialId: ''
     })
 
@@ -453,10 +422,8 @@ export default {
         apellido: '',
         dni: '',
         fechaNacimiento: '',
-        genero: 'M',
         telefono: '',
         email: '',
-        direccion: '',
         obraSocialId: ''
       })
     }
@@ -470,10 +437,8 @@ export default {
         apellido: paciente.apellido || '',
         dni: paciente.dni || '',
         fechaNacimiento: paciente.fechaNacimiento ? paciente.fechaNacimiento.split('T')[0] : '',
-        genero: paciente.genero || 'M',
         telefono: paciente.telefono || '',
         email: paciente.email || '',
-        direccion: paciente.direccion || '',
         obraSocialId: paciente.obraSocialId || ''
       })
       
@@ -489,44 +454,54 @@ export default {
 
     const guardarPaciente = async () => {
       try {
-        guardando.value = true
+        guardando.value = true;
 
-        const pacienteData = { ...formPaciente }
-        
-        // Limpiar campos vacíos
+        const pacienteData = {
+        nombre: formPaciente.nombre,
+        apellido: formPaciente.apellido,
+        dni: formPaciente.dni,
+        telefono: formPaciente.telefono || null,
+        email: formPaciente.email || null,
+        obraSocialId: formPaciente.obraSocialId ? Number(formPaciente.obraSocialId) : null
+      };
+
+
+        // --- Validar y convertir fecha ---
+        if (!formPaciente.fechaNacimiento) {
+          pacienteData.fechaNacimiento = null;
+        } else {
+          pacienteData.fechaNacimiento = new Date(formPaciente.fechaNacimiento + "T00:00:00").toISOString();
+        }
+
+        // Obra social opcional
         if (!pacienteData.obraSocialId) {
-        pacienteData.obraSocialId = null
+          pacienteData.obraSocialId = null;
         }
 
-        // Si hay fecha, convertirla a formato ISO
-        if (pacienteData.fechaNacimiento) {
-          pacienteData.fechaNacimiento = new Date(pacienteData.fechaNacimiento).toISOString()
-        }
+        console.log("Datos enviados al backend:", pacienteData);
 
-
+        // --- Crear o editar ---
         if (modoEdicion.value && pacienteEditando.value) {
-          console.log('Datos enviados al backend:', JSON.stringify(pacienteData, null, 2))
+          await pacientesAPI.update(pacienteEditando.value.id, pacienteData);
 
-          await pacientesAPI.update(pacienteEditando.value.id, pacienteData)
-          
-          // Actualizar en la lista local
-          const index = pacientes.value.findIndex(p => p.id === pacienteEditando.value.id)
+          const index = pacientes.value.findIndex(p => p.id === pacienteEditando.value.id);
           if (index !== -1) {
-            pacientes.value[index] = { ...pacientes.value[index], ...pacienteData }
+            pacientes.value[index] = { ...pacientes.value[index], ...pacienteData };
           }
         } else {
-          const nuevoPaciente = await pacientesAPI.create(pacienteData)
-          pacientes.value.push(nuevoPaciente)
+          const nuevoPaciente = await pacientesAPI.create(pacienteData);
+          pacientes.value.push(nuevoPaciente);
         }
 
-        cerrarModal()
+        cerrarModal();
       } catch (err) {
-        console.error('Error guardando paciente:', err)
-        alert('Error al guardar el paciente. Verifica los datos e intenta nuevamente.')
+        console.error("Error guardando paciente:", err);
+        alert("Error al guardar el paciente. Verifica los datos e intenta nuevamente.");
       } finally {
-        guardando.value = false
+        guardando.value = false;
       }
-    }
+    };
+
 
     const confirmarEliminacion = (paciente) => {
       if (confirm(`¿Estás seguro de que deseas eliminar el paciente ${paciente.nombre} ${paciente.apellido}?`)) {
